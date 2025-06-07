@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Client - Alert System</title>
+    <script src="https://cdn.socket.io/4.5.1/socket.io.min.js"></script>
+    <style>
+        body {
+            background-color: #121212;
+            color: #ffffff;
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        h1, h2 {
+            color: #ffffff;
+        }
+        input, select, button {
+            background-color: #1e1e1e;
+            color: #ffffff;
+            border: 1px solid #ffffff;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+<div id="login-container">
+    <h1>Client Login</h1>
+    <form id="login-form">
+        <input type="text" id="name" placeholder="Enter Your Name" required><br>
+        <select id="group">
+            <option value="A">Group A</option>
+            <option value="B">Group B</option>
+        </select><br>
+        <button type="submit">Set Name</button>
+    </form>
+</div>
+<div id="client-container" style="display: none;">
+    <h2>Welcome, <span id="client-name"></span>!</h2>
+    <p>You'll receive alerts here when the admin triggers them.</p>
+    <audio id="alert-sound" src="/static/alarm.mp3"></audio>
+</div>
+<script>
+    const socket = io();
+
+    document.getElementById('login-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const name = document.getElementById('name').value;
+        const group = document.getElementById('group').value;
+
+        socket.emit('register', { name, group });
+
+        document.getElementById('login-container').style.display = 'none';
+        document.getElementById('client-container').style.display = 'block';
+        document.getElementById('client-name').textContent = name;
+    });
+
+    socket.on('play_alert', () => {
+        const audio = document.getElementById('alert-sound');
+        audio.play().catch(err => console.error('Audio playback failed:', err));
+    });
+
+</script>
+</body>
+</html>
