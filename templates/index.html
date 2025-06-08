@@ -32,6 +32,13 @@
             <button id="send-tts-group-a" class="btn btn-info me-2">Send TTS to Group A</button>
             <button id="send-tts-group-b" class="btn btn-info">Send TTS to Group B</button>
         </div>
+
+        <h2 class="mt-4">Schedule TTS Message</h2>
+        <textarea id="schedule-tts-message" class="form-control mb-2" rows="2" placeholder="Message to schedule..."></textarea>
+        <input type="time" id="schedule-time" class="form-control mb-2">
+        <input type="number" id="repeat-interval" class="form-control mb-2" placeholder="Repeat every X minutes (optional)">
+        <button id="schedule-tts-button" class="btn btn-warning mb-3">Schedule TTS</button>
+
     </div>
 </div>
 
@@ -150,6 +157,30 @@
             body: JSON.stringify({ message, group: 'B' })
         });
     });
+
+    document.getElementById('schedule-tts-button').addEventListener('click', async () => {
+        const message = document.getElementById('schedule-tts-message').value.trim();
+        const time = document.getElementById('schedule-time').value;
+        const interval = parseInt(document.getElementById('repeat-interval').value);
+        const selectedUsers = Array.from(document.querySelectorAll('.user-checkbox:checked')).map(cb => cb.value);
+
+        if (!message || !time || (selectedUsers.length === 0)) {
+            alert("Provide a message, time, and select at least one user.");
+            return;
+        }
+
+        await fetch('/schedule_tts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                message,
+                time,
+                interval: isNaN(interval) ? null : interval,
+                users: selectedUsers
+            })
+        });
+    });
+
 </script>
 </body>
 </html>

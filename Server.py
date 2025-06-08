@@ -1,5 +1,10 @@
 from flask import Flask, render_template, request, jsonify
 from flask_socketio import SocketIO, emit
+from apscheduler.schedulers.background import BackgroundScheduler
+from datetime import datetime, timedelta
+
+scheduler = BackgroundScheduler()
+scheduler.start()
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key'
@@ -81,6 +86,41 @@ def send_tts():
                 socketio.emit('speak_tts', {'message': message}, room=uid)
 
     return jsonify({'status': 'success'})
+
+@app.route('/schedule_tts', methods=['POST'])
+def schedule_tts():
+    data = request.get_json()
+    message = data.get('message')
+    time_str = data.get('time')  # e.g., "14:30"
+    interval = data.get('interval')  # optional
+    users = data.get('users', [])
+
+    if not message or not time_str or not users:
+        return jsonify({'status': 'error', 'reason': 'Invalid input'}), 400
+
+    # Parse the time into a future datetime object
+    now = datetime.now()
+    hour, minute = map(int, time_str.split(':'))
+    run_time = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
+    if run_time < now:
+        run_time += timedelta(days=1)
+
+    def send_tts_job():
+        print(f"[Scheduled TTS] Sending to users: {users}")
+        for uid in users:
+            if uid in connected_clients:
+                socketio.emit('speak_tts', {'message': message}, room=uid)
+
+    job_id = f"tts_{datetime.now().timestamp()}"
+
+    if interval:
+        scheduler.add_job(send_tts_job, 'interval', minutes=interval, next_run_time=run_time, id=job_id)
+    else:
+        scheduler.add_job(send_tts_job, 'date', run_date=run_time, id=job_id)
+
+    print(f"Scheduled TTS at {run_time} (interval: {interval})")
+
+    return jsonify({'status': 'scheduled'})
 
 
 @socketio.on('connect')
