@@ -60,6 +60,11 @@
         audio.play().catch(err => console.error('Audio playback failed:', err));
     });
 
+    socket.on('speak_tts', (data) => {
+        const msg = new SpeechSynthesisUtterance(data.message);
+        window.speechSynthesis.speak(msg);
+    });
+
 </script>
 </body>
 </html>

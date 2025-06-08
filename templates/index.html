@@ -24,8 +24,14 @@
         <button id="send-group-a" class="btn btn-warning mt-2">Send Alert to Group A</button>
         <button id="send-group-b" class="btn btn-warning mt-2">Send Alert to Group B</button>
 
-        <h2 class="mt-4">Activity Log</h2>
-        <div id="activity-log" class="bg-secondary p-3 rounded" style="height: 200px; overflow-y: auto;"></div>
+        <h2 class="mt-4">Send TTS Message</h2>
+        <textarea id="tts-message" class="form-control mb-2" rows="2" placeholder="Type message to speak..."></textarea>
+
+        <div class="mb-4">
+            <button id="send-tts-selected" class="btn btn-success me-2">Send TTS to Selected Users</button>
+            <button id="send-tts-group-a" class="btn btn-info me-2">Send TTS to Group A</button>
+            <button id="send-tts-group-b" class="btn btn-info">Send TTS to Group B</button>
+        </div>
     </div>
 </div>
 
@@ -108,6 +114,42 @@
     });
 
     socket.on('update_users', fetchConnectedUsers);
+
+    document.getElementById('send-tts-selected').addEventListener('click', async () => {
+        const message = document.getElementById('tts-message').value.trim();
+        const selectedUsers = Array.from(document.querySelectorAll('.user-checkbox:checked')).map(cb => cb.value);
+
+        if (!message || selectedUsers.length === 0) {
+            alert("Enter a message and select at least one user.");
+            return;
+        }
+
+        await fetch('/send_tts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message, users: selectedUsers })
+        });
+    });
+
+    document.getElementById('send-tts-group-a').addEventListener('click', async () => {
+        const message = document.getElementById('tts-message').value.trim();
+        if (!message) return alert("Enter a message.");
+        await fetch('/send_tts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message, group: 'A' })
+        });
+    });
+
+    document.getElementById('send-tts-group-b').addEventListener('click', async () => {
+        const message = document.getElementById('tts-message').value.trim();
+        if (!message) return alert("Enter a message.");
+        await fetch('/send_tts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message, group: 'B' })
+        });
+    });
 </script>
 </body>
 </html>

@@ -56,6 +56,32 @@ def play_alert():
 
     return jsonify({'status': 'success'})
 
+@app.route('/send_tts', methods=['POST'])
+def send_tts():
+    data = request.get_json()
+    message = data.get('message')
+    group = data.get('group')
+    users = data.get('users', [])
+
+    if not message:
+        return jsonify({'status': 'error', 'reason': 'No message provided'}), 400
+
+    print(f"Sending TTS - Group: {group}, Users: {users}, Message: {message}")
+
+    # Send to group
+    if group:
+        for sid, user in connected_clients.items():
+            if user.get('group') == group:
+                socketio.emit('speak_tts', {'message': message}, room=sid)
+
+    # Send to individual users
+    if users:
+        for uid in users:
+            if uid in connected_clients:
+                socketio.emit('speak_tts', {'message': message}, room=uid)
+
+    return jsonify({'status': 'success'})
+
 
 @socketio.on('connect')
 def handle_connect():
