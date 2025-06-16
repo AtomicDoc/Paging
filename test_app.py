@@ -15,7 +15,7 @@ class FlaskAppTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_successful_login(self):
-        response = self.client.post('/login', json={'password': 'FWCFC'})
+        response = self.client.post('/login', json={'password': 'CHANGEME'})
         self.assertEqual(response.status_code, 200)
         self.assertIn(b'success', response.data)
 
