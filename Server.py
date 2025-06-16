@@ -85,7 +85,7 @@ def play_alert():
             if uid in connected_clients:
                 socketio.emit('play_alert', room=uid)
 
-    trigger_home_assistant("alert")
+    # trigger_home_assistant("alert")
     return jsonify({'status': 'success'})
 
 @app.route('/send_tts', methods=['POST'])
@@ -112,7 +112,7 @@ def send_tts():
             if uid in connected_clients:
                 socketio.emit('speak_tts', {'message': message}, room=uid)
 
-    trigger_home_assistant("tts", message=message)
+    # trigger_home_assistant("tts", message=message)
     return jsonify({'status': 'success'})
 
 @app.route('/schedule_tts', methods=['POST'])
