@@ -21,8 +21,8 @@ PAGE_PASSWORD = "CHANGEME"
 
 
 HOME_ASSISTANT_WEBHOOKS = {
-    "alert": "CHANGETOLOCALURL",
-    "tts": "CHANGETOLOCALURL",
+    "alert": "https://CHANGETOLOCALURL",
+    "tts": "https://CHANGETOLOCALURL",
 }
 
 
