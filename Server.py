@@ -2,19 +2,45 @@ from flask import Flask, render_template, request, jsonify
 from flask_socketio import SocketIO, emit
 from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime, timedelta
+import requests
+
+
 
 scheduler = BackgroundScheduler()
 scheduler.start()
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your-secret-key'
+app.config['SECRET_KEY'] = 'CHANGEME'
 socketio = SocketIO(app)
 
 # Store connected clients with their names and groups
 connected_clients = {}  # Format: {session_id: {"name": "UserName", "ip": "UserIP", "group": None}}
 
 # Password for the webpage
-PAGE_PASSWORD = "FWCFC"
+PAGE_PASSWORD = "CHANGEME"
+
+
+HOME_ASSISTANT_WEBHOOKS = {
+    "alert": "CHANGETOLOCALURL",
+    "tts": "CHANGETOLOCALURL",
+}
+
+
+
+def trigger_home_assistant(event_type, message=None):
+    url = HOME_ASSISTANT_WEBHOOKS.get(event_type)
+    if not url:
+        print(f"[HA] Unknown event type: {event_type}")
+        return
+
+    payload = {"message": message} if message else {}
+    try:
+        response = requests.post(url, json=payload, timeout=3)
+        print(f"[HA] Triggered {event_type}: {response.status_code}")
+    except Exception as e:
+        print(f"[HA] Error triggering {event_type}: {e}")
+
+
 
 @app.route('/admin')
 def index():
@@ -27,7 +53,7 @@ def client_page():
 @app.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
-    if data.get('password') == 'FWCFC':
+    if data.get('password') == 'CHANGEME':
         return jsonify({"status": "success"}), 200
     return jsonify({"status": "Wrong Password"}), 401
 
@@ -59,6 +85,7 @@ def play_alert():
             if uid in connected_clients:
                 socketio.emit('play_alert', room=uid)
 
+    trigger_home_assistant("alert")
     return jsonify({'status': 'success'})
 
 @app.route('/send_tts', methods=['POST'])
@@ -85,6 +112,7 @@ def send_tts():
             if uid in connected_clients:
                 socketio.emit('speak_tts', {'message': message}, room=uid)
 
+    trigger_home_assistant("tts", message=message)
     return jsonify({'status': 'success'})
 
 @app.route('/schedule_tts', methods=['POST'])
@@ -121,6 +149,43 @@ def schedule_tts():
     print(f"Scheduled TTS at {run_time} (interval: {interval})")
 
     return jsonify({'status': 'scheduled'})
+
+
+@app.route('/webhook', methods=['POST'])
+def handle_webhook():
+    data = request.get_json()
+    key = request.headers.get("X-Webhook-Key")  # simple authentication
+    if key != "Super Secret Key!":
+        return jsonify({"status": "unauthorized"}), 403
+
+    action = data.get('action')  # "tts" or "alert"
+    message = data.get('message')
+    users = data.get('users', [])
+    group = data.get('group')
+
+    if action == "tts" and message:
+        if group:
+            for sid, user in connected_clients.items():
+                if user.get('group') == group:
+                    socketio.emit('speak_tts', {'message': message}, room=sid)
+        if users:
+            for uid in users:
+                if uid in connected_clients:
+                    socketio.emit('speak_tts', {'message': message}, room=uid)
+        return jsonify({'status': 'tts_sent'})
+
+    elif action == "alert":
+        if group:
+            for sid, user in connected_clients.items():
+                if user.get('group') == group:
+                    socketio.emit('play_alert', room=sid)
+        if users:
+            for uid in users:
+                if uid in connected_clients:
+                    socketio.emit('play_alert', room=uid)
+        return jsonify({'status': 'alert_sent'})
+
+    return jsonify({'status': 'invalid request'}), 400
 
 
 @socketio.on('connect')
