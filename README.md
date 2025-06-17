@@ -2,7 +2,7 @@
 
 This project is a browser-based real-time alert system built with Flask and Socket.IO. It allows administrators to send audio alerts and spoken messages to connected clients through a control panel. Clients can register with a name and group, and receive alerts instantly through their web browser or Raspberry Pi- device.
 
-The system is intended to be used for environments like fire stations and will eventually be implemented to aid the liv
+The system is intended to be used for environments like fire stations and will eventually be implemented to aid the live-ins.
 
 ## Features
 
