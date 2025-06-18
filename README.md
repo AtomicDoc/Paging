@@ -22,7 +22,7 @@ The system is intended to be used for environments like fire stations and will e
   - Clients can upload a personal alert tone
   - Server stores and plays this tone when alerts are triggered
 
-Project Structure
+## Project Structure
 
 - Server.py                  #   Flask + SocketIO backend server
   - index.html                 #   Admin interface (login and control panel)
@@ -36,3 +36,4 @@ Project Structure
     - python-tests.yml   #   GitHub Actions workflow for automated testing
 
 
+# Once Server.py is running, go to http://localhost:8000/admin for the admin page, and http://localhost:8000/client for the client page.
